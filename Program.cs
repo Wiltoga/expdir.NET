@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace expdirapp
 {
-    internal class Program
+    internal static class Program
     {
         #region Private Methods
 
@@ -163,8 +163,33 @@ namespace expdirapp
                     File.WriteAllText("location", directory);
                     return;
                 }
+                else
+                {
+                    var letter = key.KeyChar == '.' ? '.' : char.ToLower(key.KeyChar);
+
+                    var folder = folders.ShiftLeft((selection + 1) % folders.Count).FirstOrDefault(f => (f == ".." ? f : Path.GetFileName(f).ToLower()).StartsWith(letter));
+                    if (folder != null)
+                    {
+                        Console.SetCursorPosition(0, indexMap[selection]);
+                        Console.WriteLine(Path.GetFileName(folders[selection]));
+                        selection = folders.IndexOf(folder);
+                    }
+                }
             }
         }
+
+        private static IEnumerable<T> ShiftLeft<T>(this IEnumerable<T> list, int count)
+        {
+            if (count == 0)
+                return list;
+            else if (count > 0)
+                return list.Skip(count).Concat(list.Take(count));
+            else
+                return list.Take(-count).Concat(list.Skip(-count));
+        }
+
+        private static IEnumerable<T> ShiftRight<T>(this IEnumerable<T> list, int count)
+            => list.ShiftLeft(-count);
 
         #endregion Private Methods
     }
