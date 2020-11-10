@@ -1,7 +1,7 @@
 expdir()
 {
     working="$(pwd)"
-    dir="/mnt/c/Users/natha/source/repos/WildGoat07/expdir/bin/Debug/netcoreapp3.1"
+    dir="<install directory>"
     "${dir}/expdirapp" "$@"
     if test -f "${dir}/location"; then
         location="$(cat ${dir}/location)"
