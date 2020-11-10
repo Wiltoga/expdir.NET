@@ -212,7 +212,7 @@ options :
                             folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                         letterHistory = "";
-                        selection = folders.Count > 1 ? 1 : 0;
+                        selection = dirCount > 1 ? 1 : 0;
                         folderHistory.Push(Path.GetFileName(directory));
                     }
                     else if (directory == Directory.GetDirectoryRoot(directory) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -269,7 +269,12 @@ options :
                         DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList()
                         : Directory.GetDirectories(directory).Where(f => !f.Hidden() || displayHidden).ToList();
                     if (directory != "/" && directory != ":root")
+                    {
                         folders.Insert(0, "..");
+                        dirCount = folders.Count;
+                        if (displayFiles)
+                            folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
+                    }
                     maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                 }
                 else if (key.KeyChar != 0 && key.Key != ConsoleKey.Tab && key.Key != ConsoleKey.Enter)
