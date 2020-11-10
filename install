@@ -1,24 +1,11 @@
 expdir()
 {
-  working="$(pwd)"
-  dir="/mnt/c/Users/natha/source/repos/WildGoat07/expdir/bin/Debug/netcoreapp3.1"
-  cd "${dir}"
-  if [ "$1" = "" ]; then
-    "${dir}/expdirapp" "${working}"
-  elif [ "$1" = "--help" ]; then
-    echo "Usage :"
-    echo ""
-    echo "    expdir [<directory>]"
-    echo ""
-    echo "<directory> : folder to start exploring. By default, the current folder."
-  else
-    "${dir}/expdirapp" $1
-  fi
-  if test -f "${dir}/location"; then
-    location="$(cat ${dir}/location)"
-    cd "${location}"
-    rm "${dir}/location"
-  else
-    cd "${working}"
-  fi
+    working="$(pwd)"
+    dir="/mnt/c/Users/natha/source/repos/WildGoat07/expdir/bin/Debug/netcoreapp3.1"
+    "${dir}/expdirapp" "$@"
+    if test -f "${dir}/location"; then
+        location="$(cat ${dir}/location)"
+        cd "${location}"
+        rm "${dir}/location"
+    fi
 }

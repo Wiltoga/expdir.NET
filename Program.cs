@@ -14,21 +14,40 @@ namespace expdirapp
 
         private static void Main(string[] args)
         {
-            var directory = args.Any() ? Path.GetFullPath(args.First()) : Environment.CurrentDirectory;
-            if (!Directory.Exists(directory))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("This folder does not exist.");
-                Console.ResetColor();
-                return;
-            }
+            var directory = Environment.CurrentDirectory;
+            var displayHidden = false;
+            foreach (var arg in args)
+                switch (arg)
+                {
+                    case "-a":
+                        displayHidden = true;
+                        break;
+
+                    default:
+                        directory = arg;
+                        break;
+                }
+            var fileAttribute = FileAttributes.System;
+            if (!displayHidden)
+                fileAttribute |= FileAttributes.Hidden;
+            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (directory == ":root")
+                if (directory != ":root" && !Directory.Exists(directory))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("This folder does not exist.");
+                    Console.ResetColor();
+                    return;
+                }
             var selection = 0;
             var finished = false;
             for (int i = 0; i < 15; i++)
                 Console.WriteLine();
             var startIndex = Console.CursorTop - 15;
-            var folders = Directory.GetDirectories(directory).ToList();
-            if (directory != "/")
+            var folders = directory == ":root" ?
+                DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList()
+                : new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+            if (directory != "/" && directory != ":root")
                 folders.Insert(0, "..");
             var maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
             void clear()
@@ -117,7 +136,7 @@ namespace expdirapp
                     if (folders[selection] != "..")
                     {
                         directory = folders[selection];
-                        folders = Directory.GetDirectories(directory).ToList();
+                        folders = new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
                         folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                     }
@@ -130,7 +149,7 @@ namespace expdirapp
                     else
                     {
                         directory = Directory.GetParent(directory).FullName;
-                        folders = Directory.GetDirectories(directory).ToList();
+                        folders = new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
                         if (directory != "/")
                             folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
@@ -141,10 +160,7 @@ namespace expdirapp
                     return;
                 else if (key.Key == ConsoleKey.O && key.Modifiers == ConsoleModifiers.Control && directory != ":root")
                 {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        File.WriteAllText("script.ps1", $"cd {directory}");
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                        File.WriteAllText("location", directory);
+                    File.WriteAllText("location", directory);
                     return;
                 }
             }
