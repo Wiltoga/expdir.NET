@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -27,7 +28,8 @@ namespace expdirapp
                 Console.WriteLine();
             var startIndex = Console.CursorTop - 15;
             var folders = Directory.GetDirectories(directory).ToList();
-            folders.Insert(0, "..");
+            if (directory != "/")
+                folders.Insert(0, "..");
             var maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
             void clear()
             {
@@ -67,6 +69,11 @@ namespace expdirapp
                 Console.SetCursorPosition(0, indexMap[selection]);
                 var background = Console.BackgroundColor;
                 var foreground = Console.ForegroundColor;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    background = ConsoleColor.Gray;
+                    foreground = ConsoleColor.DarkBlue;
+                }
                 Console.BackgroundColor = foreground;
                 Console.ForegroundColor = background;
                 if (directory != ":root")
@@ -114,7 +121,7 @@ namespace expdirapp
                         folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                     }
-                    else if (directory == Directory.GetDirectoryRoot(directory))
+                    else if (directory == Directory.GetDirectoryRoot(directory) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         directory = ":root";
                         folders = DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList();
@@ -124,7 +131,8 @@ namespace expdirapp
                     {
                         directory = Directory.GetParent(directory).FullName;
                         folders = Directory.GetDirectories(directory).ToList();
-                        folders.Insert(0, "..");
+                        if (directory != "/")
+                            folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                     }
                     selection = 0;
@@ -133,7 +141,10 @@ namespace expdirapp
                     return;
                 else if (key.Key == ConsoleKey.O && key.Modifiers == ConsoleModifiers.Control && directory != ":root")
                 {
-                    File.WriteAllText("script.ps1", $"cd {directory}");
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        File.WriteAllText("script.ps1", $"cd {directory}");
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        File.WriteAllText("script.sh", $"cd {directory}");
                     return;
                 }
             }
