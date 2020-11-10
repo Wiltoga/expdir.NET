@@ -121,8 +121,8 @@ options :
                 var foreground = Console.ForegroundColor;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    background = ConsoleColor.Gray;
-                    foreground = ConsoleColor.DarkBlue;
+                    background = ConsoleColor.Black;
+                    foreground = ConsoleColor.Gray;
                 }
                 if (selection >= dirCount)
                     background = ConsoleColor.DarkRed;
