@@ -4,6 +4,18 @@ Available for Windows (Powershell only) and Linux.
 
 ## Installation :
 
+You need the .NET Core 3.1 to run this program.
+
+First clone the project :
+```
+git clone https://github.com/WildGoat07/expdir.git
+```
+Then run :
+```
+dotnet build --configuration Release
+```
+The binaries are in the `./bin/Release/netcoreapp3.1` folder.
+
 On Windows :
 Once the project built, copy the binaries to a folder without admin rights, and add that folder to PATH. You also need the permission to run Powershell scripts.
 
