@@ -1,6 +1,5 @@
 expdir()
 {
-    working="$(pwd)"
     dir="<install directory>"
     "${dir}/expdirapp" "$@"
     if test -f "${dir}/location"; then
