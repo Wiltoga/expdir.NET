@@ -13,6 +13,18 @@ namespace expdirapp
     {
         #region Private Methods
 
+        private static bool Hidden(this string path)
+        {
+            if (Path.GetFileName(path).StartsWith('.'))
+                return true;
+            else if (File.Exists(path))
+                return new FileInfo(path).Attributes.HasFlag(FileAttributes.Hidden);
+            else if (Directory.Exists(path))
+                return new DirectoryInfo(path).Attributes.HasFlag(FileAttributes.Hidden);
+            else
+                return false;
+        }
+
         private static void Main(string[] args)
         {
             var directory = Environment.CurrentDirectory;
@@ -45,9 +57,6 @@ options :
                         directory = arg;
                         break;
                 }
-            var fileAttribute = FileAttributes.System;
-            if (!displayHidden)
-                fileAttribute |= FileAttributes.Hidden;
             if (directory != ":root")
                 directory = Path.GetFullPath(directory);
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -65,12 +74,12 @@ options :
             var startIndex = Console.CursorTop - 15;
             var folders = directory == ":root" ?
                 DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList()
-                : new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+                : Directory.GetDirectories(directory).Where(f => !f.Hidden() || displayHidden).ToList();
             if (directory != "/" && directory != ":root")
                 folders.Insert(0, "..");
             var dirCount = folders.Count;
             if (displayFiles)
-                folders.AddRange(new DirectoryInfo(directory).GetFiles("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName));
+                folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
             var maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
             void clear()
             {
@@ -196,11 +205,11 @@ options :
                     if (folders[selection] != "..")
                     {
                         directory = folders[selection];
-                        folders = new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+                        folders = Directory.GetDirectories(directory).Where(f => !f.Hidden() || displayHidden).ToList();
                         folders.Insert(0, "..");
                         dirCount = folders.Count;
                         if (displayFiles)
-                            folders.AddRange(new DirectoryInfo(directory).GetFiles("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName));
+                            folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                         letterHistory = "";
                         selection = folders.Count > 1 ? 1 : 0;
@@ -227,12 +236,12 @@ options :
                     else
                     {
                         directory = Directory.GetParent(directory).FullName;
-                        folders = new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+                        folders = Directory.GetDirectories(directory).Where(f => !f.Hidden() || displayHidden).ToList();
                         if (directory != "/")
                             folders.Insert(0, "..");
                         dirCount = folders.Count;
                         if (displayFiles)
-                            folders.AddRange(new DirectoryInfo(directory).GetFiles("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName));
+                            folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
                         letterHistory = "";
                         selection = 0;
@@ -258,7 +267,7 @@ options :
                 {
                     folders = directory == ":root" ?
                         DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList()
-                        : new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+                        : Directory.GetDirectories(directory).Where(f => !f.Hidden() || displayHidden).ToList();
                     if (directory != "/" && directory != ":root")
                         folders.Insert(0, "..");
                     maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
