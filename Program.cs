@@ -60,14 +60,13 @@ options :
             if (directory != ":root")
                 directory = Path.GetFullPath(directory);
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            if (directory == ":root")
-                if (directory != ":root" && !Directory.Exists(directory))
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("This path does not exist or is not a folder.");
-                    Console.ResetColor();
-                    return;
-                }
+            if (directory != ":root" && !Directory.Exists(directory))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("This path does not exist or is not a folder.");
+                Console.ResetColor();
+                return;
+            }
             var selection = 0;
             for (int i = 0; i < 15; i++)
                 Console.WriteLine();
