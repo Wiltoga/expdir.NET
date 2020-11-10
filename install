@@ -1,7 +1,7 @@
 expdir()
 {
   working="$(pwd)"
-  dir="/mnt/c/Users/natha/source/repos/WildGoat07/expdir/bin/Debug/netcoreapp3.1"
+  dir="<install directory>"
   cd "${dir}"
   if [ "$1" = "" ]; then
     "${dir}/expdirapp" "${working}"
