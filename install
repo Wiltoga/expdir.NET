@@ -1,0 +1,14 @@
+expdir()
+{
+  dir="<path to directory installation>"
+  if [ "$1" = "" ]; then
+    "${dir}/expdirapp"
+  else
+    "${dir}/expdirapp" $1
+  fi
+  if test -f "${dir}/location"; then
+    location="$(cat ${dir}/location)"
+    cd "${location}"
+    rm "${dir}/location"
+  fi
+}

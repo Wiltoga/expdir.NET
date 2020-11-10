@@ -20,9 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="expdir" Condition=" '$(OS)' == 'UNIX' ">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="expdir.ps1" Condition=" '$(OS)' == 'Windows_NT' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

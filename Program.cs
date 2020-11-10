@@ -15,6 +15,7 @@ namespace expdirapp
         private static void Main(string[] args)
         {
             var directory = args.Any() ? Path.GetFullPath(args.First()) : Environment.CurrentDirectory;
+            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             if (!Directory.Exists(directory))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -144,7 +145,7 @@ namespace expdirapp
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                         File.WriteAllText("script.ps1", $"cd {directory}");
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                        File.WriteAllText("script.sh", $"cd {directory}");
+                        File.WriteAllText("location", directory);
                     return;
                 }
             }
