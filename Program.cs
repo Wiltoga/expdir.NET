@@ -30,6 +30,8 @@ namespace expdirapp
             var fileAttribute = FileAttributes.System;
             if (!displayHidden)
                 fileAttribute |= FileAttributes.Hidden;
+            if (directory != ":root")
+                directory = Path.GetFullPath(directory);
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             if (directory == ":root")
                 if (directory != ":root" && !Directory.Exists(directory))
@@ -40,7 +42,6 @@ namespace expdirapp
                     return;
                 }
             var selection = 0;
-            var finished = false;
             for (int i = 0; i < 15; i++)
                 Console.WriteLine();
             var startIndex = Console.CursorTop - 15;
@@ -57,7 +58,12 @@ namespace expdirapp
                 for (int i = 0; i < 14; i++)
                     Console.WriteLine(new string(' ', maxSize));
             }
-            while (!finished)
+            var letterHistory = "";
+            var folderHistory = new Stack<string>();
+            if (folders.First() == "..")
+                foreach (var parent in directory.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries))
+                    folderHistory.Push(parent);
+            while (true)
             {
                 Console.ResetColor();
                 Console.SetCursorPosition(0, startIndex);
@@ -105,18 +111,37 @@ namespace expdirapp
                 Console.Write("^O");
                 Console.ResetColor();
                 if (directory != ":root")
-                    Console.Write(" : Open         ");
+                    Console.Write(" : Open   ");
                 else
                 {
                     Console.Write(" : ");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write("Open         ");
+                    Console.Write("Open   ");
                     Console.ResetColor();
                 }
                 Console.BackgroundColor = ConsoleColor.DarkRed;
                 Console.Write("^X");
                 Console.ResetColor();
-                Console.WriteLine(" : Cancel");
+                Console.Write(" : Cancel   ");
+                Console.BackgroundColor = ConsoleColor.Yellow;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.Write("^R");
+                Console.ResetColor();
+                Console.Write(" : Refresh   ");
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("Tab");
+                Console.ResetColor();
+                if (folders.First() == "..")
+                    Console.Write(" : Parent");
+                else
+                {
+                    Console.Write(" : ");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Write("Parent");
+                    Console.ResetColor();
+                }
+                Console.WriteLine();
                 var key = Console.ReadKey();
                 if (key.Key == ConsoleKey.DownArrow && selection < folders.Count - 1)
                 {
@@ -130,8 +155,10 @@ namespace expdirapp
                     Console.WriteLine(Path.GetFileName(folders[selection]));
                     selection--;
                 }
-                else if (key.Key == ConsoleKey.Enter)
+                else if (key.Key == ConsoleKey.Enter || (key.Key == ConsoleKey.Tab && folders.First() == ".."))
                 {
+                    if (key.Key == ConsoleKey.Tab)
+                        selection = 0;
                     clear();
                     if (folders[selection] != "..")
                     {
@@ -139,12 +166,26 @@ namespace expdirapp
                         folders = new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
                         folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        letterHistory = "";
+                        selection = folders.Count > 1 ? 1 : 0;
+                        folderHistory.Push(Path.GetFileName(directory));
                     }
                     else if (directory == Directory.GetDirectoryRoot(directory) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         directory = ":root";
                         folders = DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList();
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        letterHistory = "";
+                        selection = 0;
+                        if (folderHistory.Any())
+                        {
+                            var parent = folderHistory.Pop();
+                            int index = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                                folders.FindIndex(folder => Path.GetFileName(folder).ToLower() == parent.ToLower())
+                                : folders.FindIndex(folder => Path.GetFileName(folder) == parent);
+                            if (index != -1)
+                                selection = index;
+                        }
                     }
                     else
                     {
@@ -153,8 +194,18 @@ namespace expdirapp
                         if (directory != "/")
                             folders.Insert(0, "..");
                         maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        letterHistory = "";
+                        selection = 0;
+                        if (folderHistory.Any())
+                        {
+                            var parent = folderHistory.Pop();
+                            int index = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                                folders.FindIndex(folder => Path.GetFileName(folder).ToLower() == parent.ToLower())
+                                : folders.FindIndex(folder => Path.GetFileName(folder) == parent);
+                            if (index != -1)
+                                selection = index;
+                        }
                     }
-                    selection = 0;
                 }
                 else if (key.Key == ConsoleKey.X && key.Modifiers == ConsoleModifiers.Control)
                     return;
@@ -163,11 +214,30 @@ namespace expdirapp
                     File.WriteAllText("location", directory);
                     return;
                 }
-                else
+                else if (key.Key == ConsoleKey.R && key.Modifiers == ConsoleModifiers.Control)
                 {
-                    var letter = key.KeyChar == '.' ? '.' : char.ToLower(key.KeyChar);
-
-                    var folder = folders.ShiftLeft((selection + 1) % folders.Count).FirstOrDefault(f => (f == ".." ? f : Path.GetFileName(f).ToLower()).StartsWith(letter));
+                    folders = directory == ":root" ?
+                        DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList()
+                        : new DirectoryInfo(directory).GetDirectories("*", new EnumerationOptions { AttributesToSkip = fileAttribute }).Select(f => f.FullName).ToList();
+                    if (directory != "/" && directory != ":root")
+                        folders.Insert(0, "..");
+                    maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                }
+                else if (key.KeyChar != 0 && key.Key != ConsoleKey.Tab)
+                {
+                    letterHistory += char.ToLower(key.KeyChar);
+                    var folder = folders
+                        .Score(f =>
+                        {
+                            f = f == ".." ? f : Path.GetFileName(f).ToLower();
+                            var best = 0;
+                            for (int i = letterHistory.Length - 1; i >= 0; --i)
+                            {
+                                if (f.StartsWith(letterHistory.Substring(i)))
+                                    best = letterHistory.Length - i;
+                            }
+                            return best;
+                        });
                     if (folder != null)
                     {
                         Console.SetCursorPosition(0, indexMap[selection]);
@@ -176,6 +246,21 @@ namespace expdirapp
                     }
                 }
             }
+        }
+
+        private static T Score<T>(this IEnumerable<T> list, Func<T, double> calculator)
+        {
+            (T, double)? best = null;
+            foreach (var item in list)
+            {
+                var score = calculator(item);
+                if (!best.HasValue || best.Value.Item2 < score)
+                    best = (item, score);
+            }
+            if (best.HasValue)
+                return best.Value.Item1;
+            else
+                return default;
         }
 
         private static IEnumerable<T> ShiftLeft<T>(this IEnumerable<T> list, int count)
