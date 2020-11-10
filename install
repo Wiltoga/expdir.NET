@@ -1,8 +1,10 @@
 expdir()
 {
-  dir="<path to directory installation>"
+  working="$(pwd)"
+  dir="/mnt/c/Users/natha/source/repos/WildGoat07/expdir/bin/Debug/netcoreapp3.1"
+  cd "${dir}"
   if [ "$1" = "" ]; then
-    "${dir}/expdirapp"
+    "${dir}/expdirapp" "${working}"
   elif [ "$1" = "--help" ]; then
     echo "Usage :"
     echo ""
@@ -16,5 +18,7 @@ expdir()
     location="$(cat ${dir}/location)"
     cd "${location}"
     rm "${dir}/location"
+  else
+    cd "${working}"
   fi
 }

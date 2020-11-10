@@ -15,7 +15,6 @@ namespace expdirapp
         private static void Main(string[] args)
         {
             var directory = args.Any() ? Path.GetFullPath(args.First()) : Environment.CurrentDirectory;
-            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             if (!Directory.Exists(directory))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
