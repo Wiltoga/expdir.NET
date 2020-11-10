@@ -1,5 +1,5 @@
 # expdir
-command line tool to navigate in the directories. Basically a 'ls' &amp; 'cd' tool.
+command line tool to navigate in the directories. Basically a `ls` and `cd` tool.
 Available for Windows (Powershell only) and Linux.
 
 ## Installation :
