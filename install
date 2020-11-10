@@ -3,6 +3,12 @@ expdir()
   dir="<path to directory installation>"
   if [ "$1" = "" ]; then
     "${dir}/expdirapp"
+  elif [ "$1" = "--help" ]; then
+    echo "Usage :"
+    echo ""
+    echo "    expdir [<directory>]"
+    echo ""
+    echo "<directory> : folder to start exploring. By default, the current folder."
   else
     "${dir}/expdirapp" $1
   fi
