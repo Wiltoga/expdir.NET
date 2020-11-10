@@ -5,10 +5,10 @@ Available for Windows (Powershell only) and Linux.
 ## Installation :
 
 On Windows :
-Once the project built, copy the files to a folder without admin rights, and add that folder to PATH.
+Once the project built, copy the binaries to a folder without admin rights, and add that folder to PATH.
 
 On Linux :
-Once the project built, copy the files somewhere with write/read rights. Then copy the [install file content](https://github.com/WildGoat07/expdir/blob/master/install) into the `.bashrc`. Do not forget to change the `dir`variable to where you put the files in the first place.
+Once the project built, copy the binaries somewhere with write/read rights. Then copy the [install file content](https://github.com/WildGoat07/expdir/blob/master/install) into the `.bashrc`. Do not forget to change the `dir`variable to where you put the files in the first place.
 
 ## How to use :
 
