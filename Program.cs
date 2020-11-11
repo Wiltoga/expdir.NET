@@ -79,11 +79,12 @@ options :
             var dirCount = folders.Count;
             if (displayFiles)
                 folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
-            var maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+            var maxSize = folders.Any() ? folders.Max(f => Path.GetFileName(f).Length) : 0;
             void clear()
             {
                 Console.SetCursorPosition(0, startIndex);
                 Console.WriteLine(new string(' ', directory.Length + 20));
+                Console.SetCursorPosition(0, startIndex + 1);
                 for (int i = 0; i < 14; i++)
                     Console.WriteLine(new string(' ', maxSize));
             }
@@ -100,7 +101,6 @@ options :
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(directory);
                 Console.ResetColor();
-                Console.WriteLine();
                 var indexMap = new Dictionary<int, int>();
                 var toDisplay = folders.Where((f, i) =>
                 {
@@ -110,6 +110,7 @@ options :
                     var max = Math.Min(min + 10, folders.Count - 1);
                     return i >= min && i <= max;
                 }).ToList();
+                Console.SetCursorPosition(0, startIndex + 2);
                 for (int i = 0; i < toDisplay.Count; ++i)
                 {
                     var trueIndex = folders.IndexOf(toDisplay[i]);
@@ -209,7 +210,7 @@ options :
                         dirCount = folders.Count;
                         if (displayFiles)
                             folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
-                        maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        maxSize = folders.Any() ? folders.Max(f => Path.GetFileName(f).Length) : 0;
                         letterHistory = "";
                         selection = dirCount > 1 ? 1 : 0;
                         folderHistory.Push(Path.GetFileName(directory));
@@ -219,7 +220,7 @@ options :
                         directory = ":root";
                         folders = DriveInfo.GetDrives().Select(d => d.RootDirectory.FullName).ToList();
                         dirCount = folders.Count;
-                        maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        maxSize = folders.Any() ? folders.Max(f => Path.GetFileName(f).Length) : 0;
                         letterHistory = "";
                         selection = 0;
                         if (folderHistory.Any())
@@ -241,7 +242,7 @@ options :
                         dirCount = folders.Count;
                         if (displayFiles)
                             folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
-                        maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                        maxSize = folders.Any() ? folders.Max(f => Path.GetFileName(f).Length) : 0;
                         letterHistory = "";
                         selection = 0;
                         if (folderHistory.Any())
@@ -274,7 +275,7 @@ options :
                         if (displayFiles)
                             folders.AddRange(Directory.GetFiles(directory).Where(f => !f.Hidden() || displayHidden).ToList());
                     }
-                    maxSize = folders.Any() ? folders.Max(f => f.Length) : 0;
+                    maxSize = folders.Any() ? folders.Max(f => Path.GetFileName(f).Length) : 0;
                 }
                 else if (key.KeyChar != 0 && key.Key != ConsoleKey.Tab && key.Key != ConsoleKey.Enter)
                 {
