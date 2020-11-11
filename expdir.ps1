@@ -1,7 +1,15 @@
-Invoke-Expression "$PSScriptRoot/expdirapp.exe $args"
+$dir = Get-Location
+$curr = "$PSScriptRoot"
+$args = """$curr""" + $args
+cd $curr
+Invoke-Expression "./expdirapp.exe $args"
 if(Test-Path location)
 {
-	$location = "$(cat $PSScriptRoot/location)"
+	$location = "$(cat "./location")"
+	rm "./location"
 	cd $location
-	rm "$PSScriptRoot/location"
+}
+else
+{
+    cd $dir
 }
