@@ -85,7 +85,7 @@ options :
                 Console.SetCursorPosition(0, startIndex);
                 Console.WriteLine(new string(' ', directory.Length + 20));
                 Console.SetCursorPosition(0, startIndex + 1);
-                for (int i = 0; i < 14; i++)
+                for (int i = 0; i < 12; i++)
                     Console.WriteLine(new string(' ', maxSize));
             }
             var letterHistory = "";
@@ -93,13 +93,55 @@ options :
             if (folders.First() == "..")
                 foreach (var parent in directory.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries))
                     folderHistory.Push(parent);
+            bool updateDisplayedPath = true;
+            Console.ResetColor();
+            Console.SetCursorPosition(0, startIndex + 14);
+            Console.BackgroundColor = ConsoleColor.DarkGreen;
+            Console.Write("^O");
+            Console.ResetColor();
+            int openPosition = Console.CursorLeft;
+            if (directory != ":root")
+                Console.Write(" : Open   ");
+            else
+            {
+                Console.Write(" : ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("Open   ");
+                Console.ResetColor();
+            }
+            Console.BackgroundColor = ConsoleColor.DarkRed;
+            Console.Write("^X");
+            Console.ResetColor();
+            Console.Write(" : Cancel   ");
+            Console.BackgroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.Write("^R");
+            Console.ResetColor();
+            Console.Write(" : Refresh   ");
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Tab");
+            Console.ResetColor();
+            int parentPosition = Console.CursorLeft;
+            if (folders.First() == "..")
+                Console.Write(" : Parent");
+            else
+            {
+                Console.Write(" : ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("Parent");
+            }
             while (true)
             {
-                Console.ResetColor();
-                Console.SetCursorPosition(0, startIndex);
-                Console.Write("Current directory : ");
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine(directory);
+                if (updateDisplayedPath)
+                {
+                    Console.ResetColor();
+                    Console.SetCursorPosition(0, startIndex);
+                    Console.Write("Current directory : ");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine(directory);
+                    updateDisplayedPath = false;
+                }
                 Console.ResetColor();
                 var indexMap = new Dictionary<int, int>();
                 var toDisplay = folders.Where((f, i) =>
@@ -111,19 +153,42 @@ options :
                     return i >= min && i <= max;
                 }).ToList();
                 Console.SetCursorPosition(0, startIndex + 2);
+                var contentBuffer = new StringBuilder();
+                for (int i = 0; i < toDisplay.Count; ++i)
+                    contentBuffer.Append($"{new string(' ', maxSize)}\n");
+                Console.Write(contentBuffer.ToString());
+                contentBuffer.Clear();
+                Console.SetCursorPosition(0, startIndex + 2);
+                int currentContentIndex = 0;
+                int topContentCursor = Console.CursorTop;
                 for (int i = 0; i < toDisplay.Count; ++i)
                 {
                     var trueIndex = folders.IndexOf(toDisplay[i]);
-                    Console.Write(new string(' ', maxSize));
-                    Console.CursorLeft = 0;
                     if (trueIndex >= dirCount)
-                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
                     if (directory != ":root")
-                        Console.WriteLine(Path.GetFileName(toDisplay[i]));
+                        contentBuffer.Append($"{Path.GetFileName(toDisplay[i])}\n");
                     else
-                        Console.WriteLine(toDisplay[i]);
+                        contentBuffer.Append($"{toDisplay[i]}\n");
+                    indexMap.Add(trueIndex, topContentCursor + i);
+                    currentContentIndex++;
+                }
+                Console.Write(contentBuffer.ToString());
+                contentBuffer.Clear();
+                if (currentContentIndex < toDisplay.Count)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    for (int i = currentContentIndex; i < toDisplay.Count; ++i)
+                    {
+                        var trueIndex = folders.IndexOf(toDisplay[i]);
+                        if (directory != ":root")
+                            contentBuffer.Append($"{Path.GetFileName(toDisplay[i])}\n");
+                        else
+                            contentBuffer.Append($"{toDisplay[i]}\n");
+                        indexMap.Add(trueIndex, topContentCursor + i);
+                    }
+                    Console.Write(contentBuffer.ToString());
                     Console.ResetColor();
-                    indexMap.Add(trueIndex, Console.CursorTop - 1);
                 }
                 Console.SetCursorPosition(0, indexMap[selection]);
                 var background = Console.BackgroundColor;
@@ -142,10 +207,7 @@ options :
                 else
                     Console.WriteLine(folders[selection]);
                 Console.ResetColor();
-                Console.SetCursorPosition(0, startIndex + 14);
-                Console.BackgroundColor = ConsoleColor.DarkGreen;
-                Console.Write("^O");
-                Console.ResetColor();
+                Console.SetCursorPosition(openPosition, startIndex + 14);
                 if (directory != ":root")
                     Console.Write(" : Open   ");
                 else
@@ -155,19 +217,7 @@ options :
                     Console.Write("Open   ");
                     Console.ResetColor();
                 }
-                Console.BackgroundColor = ConsoleColor.DarkRed;
-                Console.Write("^X");
-                Console.ResetColor();
-                Console.Write(" : Cancel   ");
-                Console.BackgroundColor = ConsoleColor.Yellow;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.Write("^R");
-                Console.ResetColor();
-                Console.Write(" : Refresh   ");
-                Console.BackgroundColor = ConsoleColor.DarkBlue;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("Tab");
-                Console.ResetColor();
+                Console.CursorLeft = parentPosition;
                 if (folders.First() == "..")
                     Console.Write(" : Parent");
                 else
@@ -175,26 +225,15 @@ options :
                     Console.Write(" : ");
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write("Parent");
-                    Console.ResetColor();
                 }
-                Console.WriteLine();
+                Console.ResetColor();
                 var key = Console.ReadKey();
                 if (key.Key == ConsoleKey.DownArrow && selection < folders.Count - 1)
                 {
-                    Console.SetCursorPosition(0, indexMap[selection]);
-                    if (selection >= dirCount)
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(Path.GetFileName(folders[selection]));
-                    Console.ResetColor();
                     selection++;
                 }
                 else if (key.Key == ConsoleKey.UpArrow && selection > 0)
                 {
-                    Console.SetCursorPosition(0, indexMap[selection]);
-                    if (selection >= dirCount)
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(Path.GetFileName(folders[selection]));
-                    Console.ResetColor();
                     selection--;
                 }
                 else if ((key.Key == ConsoleKey.Enter && selection < dirCount) || (key.Key == ConsoleKey.Tab && folders.First() == ".."))
@@ -214,6 +253,7 @@ options :
                         letterHistory = "";
                         selection = dirCount > 1 ? 1 : 0;
                         folderHistory.Push(Path.GetFileName(directory));
+                        updateDisplayedPath = true;
                     }
                     else if (directory == Directory.GetDirectoryRoot(directory) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
@@ -232,6 +272,7 @@ options :
                             if (index != -1)
                                 selection = index;
                         }
+                        updateDisplayedPath = true;
                     }
                     else
                     {
@@ -254,14 +295,15 @@ options :
                             if (index != -1)
                                 selection = index;
                         }
+                        updateDisplayedPath = true;
                     }
                 }
                 else if (key.Key == ConsoleKey.X && key.Modifiers == ConsoleModifiers.Control)
-                    return;
+                    break;
                 else if (key.Key == ConsoleKey.O && key.Modifiers == ConsoleModifiers.Control && directory != ":root")
                 {
                     File.WriteAllText("location", directory);
-                    return;
+                    break;
                 }
                 else if (key.Key == ConsoleKey.R && key.Modifiers == ConsoleModifiers.Control)
                 {
@@ -300,6 +342,7 @@ options :
                     }
                 }
             }
+            Console.SetCursorPosition(0, startIndex + 15);
         }
 
         private static T Score<T>(this IEnumerable<T> list, Func<T, double> calculator)
